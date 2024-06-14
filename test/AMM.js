@@ -19,7 +19,10 @@ describe('AMM', () => {
         token1 = await Token.deploy('MyToken', 'MTKN', '1000000')
         token2 = await Token.deploy('USD Token', 'USDt', '1000000')
 
-        
+        let transaction = await token1.connect(deployer).transfer(liquidityProvider.address, tokens(100000))
+        await transaction.wait()
+        transaction = await token2.connect(deployer).transfer(liquidityProvider.address, tokens(100000))
+        await transaction.wait()
 
         const AMM = await ethers.getContractFactory('AMM')
         amm = await AMM.deploy(token1.address, token2.address)
@@ -39,6 +42,29 @@ describe('AMM', () => {
     })
 
     describe('Add Liquidity', () => {
-        it('')
+        let amount, transaction, result
+        it('Swap', async () => {
+            amount = tokens(100000)
+            transaction = await token1.connect(deployer).approve(amm.address, amount)
+            await transaction.wait()
+
+            transaction = await token2.connect(deployer).approve(amm.address, amount)
+            await transaction.wait()
+
+            transaction = await amm.connect(deployer).addLiquidity(amount, amount)
+            await transaction.wait()
+
+            expect(await token1.balanceOf(amm.address)).to.equal(amount)
+            expect(await token2.balanceOf(amm.address)).to.equal(amount)
+
+            expect(await amm.token1Balance()).to.equal(amount)
+            expect(await amm.token2Balance()).to.equal(amount)
+
+            expect(await amm.K()).to.equal(amount.mul(amount))
+
+            expect(await amm.shares(deployer.address)).to.equal(tokens(100))
+
+            expect(await amm.totalShares()).to.equal(tokens(100))
+        })
     })
 })
