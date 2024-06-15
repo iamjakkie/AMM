@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "hardhat/console.sol";
-import './Token.sol';
+import "./Token.sol";
 // [] Manage Pool
 // [] Manage Deposits
 // [] Facilitate Swaps
@@ -25,22 +25,28 @@ contract AMM {
         token2 = _token2;
     }
 
-    function addLiquidity(uint256 _token1Amount, uint256 _token2Amount) external {
+    function addLiquidity(
+        uint256 _token1Amount,
+        uint256 _token2Amount
+    ) external {
         // deposit tokens
         require(
             token1.transferFrom(msg.sender, address(this), _token1Amount),
-            'Failed to transfer token1'
+            "Failed to transfer token1"
         );
         require(
             token2.transferFrom(msg.sender, address(this), _token2Amount),
-            'Failed to transfer token2'
+            "Failed to transfer token2"
         );
         // issue shares
         uint256 share;
         if (totalShares == 0) {
             share = 100 * PRECISION;
         } else {
-
+            uint256 share1 = (totalShares * _token1Amount) / token1Balance;
+            uint256 share2 = (totalShares * _token2Amount) / token2Balance;
+            require(share1 / 10 ** 3 == share2 / 10 ** 3);
+            share = share1;
         }
 
         totalShares += share;
@@ -50,5 +56,17 @@ contract AMM {
         token1Balance += _token1Amount;
         token2Balance += _token2Amount;
         K = token1Balance * token2Balance;
+    }
+
+    function calculateToken2Deposit(
+        uint256 _token1Amount
+    ) public view returns (uint256) {
+        return (_token1Amount * token2Balance) / token1Balance;
+    }
+
+    function calculateToken1Deposit(
+        uint256 _token2Amount
+    ) public view returns (uint256) {
+        return (_token2Amount * token1Balance) / token2Balance;
     }
 }
