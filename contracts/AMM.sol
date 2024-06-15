@@ -69,4 +69,14 @@ contract AMM {
     ) public view returns (uint256) {
         return (_token2Amount * token1Balance) / token2Balance;
     }
+
+    function swapToken1(
+        uint256 _token1Amount
+    ) external returns (uint256 token2Amount) {
+        uint256 token1After = token1Balance + _token1Amount;
+        uint256 token2After = K / token1After;
+        token2Amount = token2Balance - token2After;
+    }
+
+    function swapToken2() {}
 }
